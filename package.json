@@ -1,0 +1,23 @@
+{
+  "name": "org-mate",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "org-mate": "./index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@types/react": "^19.2.0",
+    "commander": "^14.0.1",
+    "ink": "^6.3.1",
+    "ollama": "^0.6.0",
+    "react": "^19.2.0"
+  }
+}
