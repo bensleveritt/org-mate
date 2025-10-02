@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
-import { OllamaClient, Message } from '../lib/ollama.js';
+import React, { useState, useEffect } from "react";
+import { Box, Text, useInput, useApp } from "ink";
+import { OllamaClient, type Message } from "../lib/ollama.js";
 
 interface ChatProps {
   model: string;
+  host: string;
+  systemPrompt: string;
 }
 
-const Chat: React.FC<ChatProps> = ({ model }) => {
+const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
   const { exit } = useApp();
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: 'system',
-      content: 'You are a helpful personal organization assistant. Help the user manage tasks, schedule, and stay organized.',
+      role: "system",
+      content: systemPrompt,
     },
   ]);
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [response, setResponse] = useState('');
+  const [response, setResponse] = useState("");
 
   useInput((input, key) => {
-    if (key.escape || (key.ctrl && input === 'c')) {
+    if (key.escape || (key.ctrl && input === "c")) {
       exit();
       return;
     }
@@ -44,17 +46,17 @@ const Chat: React.FC<ChatProps> = ({ model }) => {
 
     const newMessages: Message[] = [
       ...messages,
-      { role: 'user', content: userMessage },
+      { role: "user", content: userMessage },
     ];
 
     setMessages(newMessages);
-    setInputText('');
+    setInputText("");
     setIsLoading(true);
-    setResponse('');
+    setResponse("");
 
     try {
-      const client = new OllamaClient(model);
-      let fullResponse = '';
+      const client = new OllamaClient(model, host);
+      let fullResponse = "";
 
       for await (const chunk of client.chatStream(newMessages)) {
         fullResponse += chunk;
@@ -63,11 +65,11 @@ const Chat: React.FC<ChatProps> = ({ model }) => {
 
       setMessages([
         ...newMessages,
-        { role: 'assistant', content: fullResponse },
+        { role: "assistant", content: fullResponse },
       ]);
     } catch (error) {
       setResponse(
-        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setIsLoading(false);
@@ -84,11 +86,11 @@ const Chat: React.FC<ChatProps> = ({ model }) => {
 
       <Box flexDirection="column" marginBottom={1}>
         {messages
-          .filter((m) => m.role !== 'system')
+          .filter((m) => m.role !== "system")
           .map((msg, idx) => (
             <Box key={idx} marginBottom={1} flexDirection="column">
-              <Text bold color={msg.role === 'user' ? 'green' : 'blue'}>
-                {msg.role === 'user' ? '→ You' : '← Assistant'}:
+              <Text bold color={msg.role === "user" ? "green" : "blue"}>
+                {msg.role === "user" ? "→ You" : "← Assistant"}:
               </Text>
               <Text>{msg.content}</Text>
             </Box>
@@ -110,7 +112,7 @@ const Chat: React.FC<ChatProps> = ({ model }) => {
             <Text color="yellow">Loading...</Text>
           ) : (
             <>
-              <Text color="green">{'> '}</Text>
+              <Text color="green">{"> "}</Text>
               <Text>{inputText}</Text>
               <Text color="gray">█</Text>
             </>
