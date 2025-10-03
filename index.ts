@@ -4,6 +4,7 @@ import { render } from "ink";
 import React from "react";
 import Chat from "./src/components/Chat.js";
 import { ConfigManager } from "./src/lib/config.js";
+import { SearchEngine } from "./src/lib/search.js";
 
 const config = new ConfigManager();
 
@@ -24,7 +25,21 @@ program
     const host = cfg.ollama.host;
     const systemPrompt = cfg.assistant.systemPrompt;
 
-    render(React.createElement(Chat, { model, host, systemPrompt }));
+    // Initialize search engine if knowledge base is configured
+    let searchEngine: SearchEngine | undefined;
+    if (cfg.knowledgeBase.directories.length > 0) {
+      searchEngine = new SearchEngine(cfg.knowledgeBase.directories);
+    }
+
+    render(
+      React.createElement(Chat, {
+        model,
+        host,
+        systemPrompt,
+        searchEngine,
+        enableAutoSearch: cfg.knowledgeBase.enableAutoSearch,
+      }),
+    );
   });
 
 program

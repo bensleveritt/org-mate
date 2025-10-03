@@ -9,6 +9,12 @@ export interface Config {
   assistant: {
     systemPrompt: string;
   };
+  knowledgeBase: {
+    directories: string[];
+    filePatterns: string[];
+    excludePatterns: string[];
+    enableAutoSearch: boolean;
+  };
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -19,6 +25,12 @@ const DEFAULT_CONFIG: Config = {
   assistant: {
     systemPrompt:
       "You are a helpful personal organization assistant. Help the user manage tasks, schedule, and stay organized.",
+  },
+  knowledgeBase: {
+    directories: [],
+    filePatterns: ["*.org", "*.md", "*.txt"],
+    excludePatterns: [".git", "node_modules", ".obsidian"],
+    enableAutoSearch: false,
   },
 };
 
