@@ -6,6 +6,12 @@
   "bin": {
     "org-mate": "./index.ts"
   },
+  "scripts": {
+    "dev": "bun run --watch index.ts chat",
+    "start": "bun run index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit --pretty"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^24.6.2"
