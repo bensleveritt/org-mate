@@ -19,6 +19,7 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
+  const [messageQueue, setMessageQueue] = useState<string[]>([]);
 
   useInput((input, key) => {
     if (key.escape || (key.ctrl && input === "c")) {
@@ -27,9 +28,7 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
     }
 
     if (key.return) {
-      if (!isLoading) {
-        handleSubmit();
-      }
+      handleSubmit();
       return;
     }
 
@@ -40,17 +39,28 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
     }
   });
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const userMessage = inputText.trim();
     if (!userMessage) return;
 
+    setInputText("");
+
+    if (isLoading) {
+      // Add to queue if currently processing
+      setMessageQueue((prev) => [...prev, userMessage]);
+    } else {
+      // Process immediately if not loading
+      processMessage(userMessage);
+    }
+  };
+
+  const processMessage = async (userMessage: string) => {
     const newMessages: Message[] = [
       ...messages,
       { role: "user", content: userMessage },
     ];
 
     setMessages(newMessages);
-    setInputText("");
     setIsLoading(true);
     setResponse("");
 
@@ -63,10 +73,11 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
         setResponse(fullResponse);
       }
 
-      setMessages([
+      const updatedMessages: Message[] = [
         ...newMessages,
         { role: "assistant", content: fullResponse },
-      ]);
+      ];
+      setMessages(updatedMessages);
     } catch (error) {
       setResponse(
         `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -75,6 +86,18 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
       setIsLoading(false);
     }
   };
+
+  // Process queued messages when loading completes
+  useEffect(() => {
+    if (!isLoading && messageQueue.length > 0) {
+      const nextMessage = messageQueue[0];
+      const remainingQueue = messageQueue.slice(1);
+      setMessageQueue(remainingQueue);
+      if (nextMessage !== undefined) {
+        processMessage(nextMessage);
+      }
+    }
+  }, [isLoading, messageQueue]);
 
   return (
     <Box flexDirection="column" padding={1}>
@@ -104,19 +127,27 @@ const Chat: React.FC<ChatProps> = ({ model, host, systemPrompt }) => {
             <Text>{response}</Text>
           </Box>
         )}
+
+        {messageQueue.length > 0 && (
+          <Box marginBottom={1} flexDirection="column">
+            <Text bold color="yellow">
+              Queued messages ({messageQueue.length}):
+            </Text>
+            {messageQueue.map((msg, idx) => (
+              <Text key={idx} color="gray">
+                {idx + 1}. {msg}
+              </Text>
+            ))}
+          </Box>
+        )}
       </Box>
 
       <Box borderStyle="single" borderColor="gray" padding={1}>
         <Text>
-          {isLoading ? (
-            <Text color="yellow">Loading...</Text>
-          ) : (
-            <>
-              <Text color="green">{"> "}</Text>
-              <Text>{inputText}</Text>
-              <Text color="gray">█</Text>
-            </>
-          )}
+          <Text color="green">{"> "}</Text>
+          <Text>{inputText}</Text>
+          <Text color="gray">█</Text>
+          {isLoading && <Text color="yellow"> (processing...)</Text>}
         </Text>
       </Box>
 
